@@ -109,66 +109,68 @@ def text_detection(roi, orig, dic_results, start_x, start_y, end_x, end_y):
 	
 	return dic_results
 
-# Inicializa as dimensões originais do quadro, as novas dimensões e as relações entre as dimensões
-height_H, width_W, r_h, r_w, new_w, new_h = initialize_dimension(160, 160)
+if __name__ == "__main__":
 
-# Define os dois nomes de camadas de saída para o modelo ​​- o primeiro é as probabilidades de saída e o segundo pode ser usado para derivar as coordenadas da caixa delimitadora do texto
-layer_names = ["feature_fusion/Conv_7/Sigmoid","feature_fusion/concat_3"]
+	# Inicializa as dimensões originais do quadro, as novas dimensões e as relações entre as dimensões
+	height_H, width_W, r_h, r_w, new_w, new_h = initialize_dimension(160, 160)
 
-# Carregar o modelo EAST pré-treinado
-model = cv2.dnn.readNetFromTensorflow("frozen_east_text_detection.pb")
+	# Define os dois nomes de camadas de saída para o modelo ​​- o primeiro é as probabilidades de saída e o segundo pode ser usado para derivar as coordenadas da caixa delimitadora do texto
+	layer_names = ["feature_fusion/Conv_7/Sigmoid","feature_fusion/concat_3"]
 
-# Pegua a referência para a web cam
-vs = cv2.VideoCapture(0)
+	# Carregar o modelo EAST pré-treinado
+	model = cv2.dnn.readNetFromTensorflow("frozen_east_text_detection.pb")
 
-# Iniciar o estimador de taxa de transferência do FPS
-fps = FPS().start()
+	# Pegua a referência para a web cam
+	vs = cv2.VideoCapture(0)
 
-# loop em quadros do fluxo de vídeo
-cont = 10000
-dic_results = {}
+	# Iniciar o estimador de taxa de transferência do FPS
+	fps = FPS().start()
 
-while True:
-	if cont > 10000:
-		# Pegua o quadro atual
-		frame = vs.read()
-		frame = frame[1]
+	# loop em quadros do fluxo de vídeo
+	cont = 10000
+	dic_results = {}
 
-		if frame is None:
-			break
+	while True:
+		if cont > 10000:
+			# Pegua o quadro atual
+			frame = vs.read()
+			frame = frame[1]
 
-		# Redimensionar o quadro, mantendo a proporção
-		frame = imutils.resize(frame, width=800)
-		orig = frame.copy()
-		
-		# Se nossas dimensões de quadro forem Nenhum, camptura proporção de dimensões de quadro antigas para novas dimensões de quadro
-		if width_W is None or height_H is None:
-			height_H, width_W, r_w, r_h = resizing(frame, height_H, width_W, r_w, r_h)
+			if frame is None:
+				break
 
-		# Redimensionar o quadro
-		frame = cv2.resize(frame, (new_w, new_h))
-		
-		boxes = model_detect_boxes(model, frame, new_w, new_h)
-		
-		detect_character_from_boxes(boxes, r_w, r_h, dic_results)
-		
-		fps.update()
+			# Redimensionar o quadro, mantendo a proporção
+			frame = imutils.resize(frame, width=800)
+			orig = frame.copy()
+			
+			# Se nossas dimensões de quadro forem Nenhum, camptura proporção de dimensões de quadro antigas para novas dimensões de quadro
+			if width_W is None or height_H is None:
+				height_H, width_W, r_w, r_h = resizing(frame, height_H, width_W, r_w, r_h)
 
-		cv2.imshow("Text Detection", orig)
-		key = cv2.waitKey(1) & 0xFF
+			# Redimensionar o quadro
+			frame = cv2.resize(frame, (new_w, new_h))
+			
+			boxes = model_detect_boxes(model, frame, new_w, new_h)
+			
+			detect_character_from_boxes(boxes, r_w, r_h, dic_results)
+			
+			fps.update()
 
-		# Se a tecla `q` foi pressionada, interrompa o loop
-		if key == ord("q"):
-			break
-		
-		cont = 0
-	else:
-		#print(cont)
-		cont+=1
+			cv2.imshow("Text Detection", orig)
+			key = cv2.waitKey(1) & 0xFF
 
-# Pare o cronômetro e exiba as informações do FPS
-fps.stop()
-print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
-print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+			# Se a tecla `q` foi pressionada, interrompa o loop
+			if key == ord("q"):
+				break
+			
+			cont = 0
+		else:
+			#print(cont)
+			cont+=1
 
-cv2.destroyAllWindows()
+	# Pare o cronômetro e exiba as informações do FPS
+	fps.stop()
+	print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+	print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+
+	cv2.destroyAllWindows()
