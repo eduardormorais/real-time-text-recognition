@@ -1,1 +1,1 @@
-# real_time_text_recognition
+# Real Time Text Recognition.
